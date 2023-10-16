@@ -6,6 +6,7 @@ import (
 
 	"github.com/gerachinchillar/gorm-api/db"
 	"github.com/gerachinchillar/gorm-api/model"
+	"github.com/gorilla/mux"
 )
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +16,16 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("get user"))
+	var user model.User
+	params := mux.Vars(r)
+	db.DB.First(&user, params["id"])
+
+	if user.ID == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("User Not Found"))
+		return
+	}
+	json.NewEncoder(w).Encode(user)
 }
 
 func PostUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,5 +44,17 @@ func PostUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUsersHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("delete"))
+	var user model.User
+	params := mux.Vars(r)
+	db.DB.First(&user, params["id"])
+
+	if user.ID == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("User Not Found"))
+		return
+	}
+	db.DB.Unscoped().Delete(&user)
+
+	json.NewEncoder(w).Encode(user)
+	w.WriteHeader(http.StatusOK)
 }
